@@ -165,6 +165,7 @@ class ElastAlerter(object):
         self.string_multi_field_name = self.conf.get('string_multi_field_name', False)
         self.add_metadata_alert = self.conf.get('add_metadata_alert', False)
         self.show_disabled_rules = self.conf.get('show_disabled_rules', True)
+        self.thread_data.alerts_sent = 0
 
         self.writeback_es = elasticsearch_client(self.conf)
 
@@ -507,15 +508,26 @@ class ElastAlerter(object):
 
         try:
             if not rule['five']:
-                res = self.thread_data.current_es.deprecated_search(
-                    index=index,
-                    doc_type=rule['doc_type'],
-                    body=query,
-                    search_type='count',
-                    ignore_unavailable=True
-                )
+                if self.thread_data.current_es.is_atleastseveneleven:
+                    res = self.thread_data.current_es.search(
+                        index=index,
+                        body=query,
+                        search_type='count',
+                        ignore_unavailable=True
+                    )
+                else:
+                    res = self.thread_data.current_es.deprecated_search(
+                        index=index,
+                        doc_type=rule['doc_type'],
+                        body=query,
+                        search_type='count',
+                        ignore_unavailable=True
+                    )
             else:
-                res = self.thread_data.current_es.deprecated_search(index=index, doc_type=rule['doc_type'],
+                if self.thread_data.current_es.is_atleastseveneleven:
+                    res = self.thread_data.current_es.search(index=index, body=query, size=0, ignore_unavailable=True)
+                else:
+                    res = self.thread_data.current_es.deprecated_search(index=index, doc_type=rule['doc_type'],
                                                                     body=query, size=0, ignore_unavailable=True)
         except ElasticsearchException as e:
             # Elasticsearch sometimes gives us GIGANTIC error messages
@@ -1411,7 +1423,11 @@ class ElastAlerter(object):
         query = {'query': {'term': {'_id': db_name}}}
         try:
             # TODO use doc_type = _doc
-            res = es.deprecated_search(index='kibana-int', doc_type='dashboard', body=query, _source_include=['dashboard'])
+            if self.thread_data.current_es.is_atleastseveneleven:
+                res = es.search(index='kibana-int', body=query, _source_include=['dashboard'])
+            else:
+                res = es.deprecated_search(index='kibana-int', doc_type='dashboard', body=query,
+                                           _source_include=['dashboard'])
         except ElasticsearchException as e:
             raise EAException("Error querying for dashboard: %s" % (e)).with_traceback(sys.exc_info()[2])
 

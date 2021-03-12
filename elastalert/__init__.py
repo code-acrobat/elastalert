@@ -86,6 +86,13 @@ class ElasticSearchClient(Elasticsearch):
         """
         return int(self.es_version.split(".")[0]) >= 7
 
+    def is_atleastseveneleven(self):
+        """
+        Returns True when the Elasticsearch server version >= 7
+        """
+        major, minor = list(map(int, self.es_version.split(".")[:2]))
+        return major > 7 or (major == 7 and minor >= 11)
+
     def resolve_writeback_index(self, writeback_index, doc_type):
         """ In ES6, you cannot have multiple _types per index,
         therefore we use self.writeback_index as the prefix for the actual

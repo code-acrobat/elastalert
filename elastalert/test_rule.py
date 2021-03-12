@@ -83,7 +83,10 @@ class MockElastAlerter(object):
 
         # Get one document for schema
         try:
-            res = es_client.search(index, size=1, body=query, ignore_unavailable=True)
+            if es_client.is_atleastseveneleven():
+                res = es_client.search(index=index, size=1, body=query, ignore_unavailable=True)
+            else:
+                res = es_client.search(index, size=1, body=query, ignore_unavailable=True)
         except Exception as e:
             print("Error running your filter:", file=sys.stderr)
             print(repr(e)[:2048], file=sys.stderr)
@@ -153,7 +156,10 @@ class MockElastAlerter(object):
         # Download up to max_query_size (defaults to 10,000) documents to save
         if (args.save or args.formatted_output) and not args.count:
             try:
-                res = es_client.search(index, size=args.max_query_size, body=query, ignore_unavailable=True)
+                if es_client.is_atleastseveneleven():
+                    res = es_client.search(index=index, size=args.max_query_size, body=query, ignore_unavailable=True)
+                else:
+                    res = es_client.search(index, size=args.max_query_size, body=query, ignore_unavailable=True)
             except Exception as e:
                 print("Error running your filter:", file=sys.stderr)
                 print(repr(e)[:2048], file=sys.stderr)

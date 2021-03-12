@@ -20,9 +20,9 @@ def main():
 
     query = {'query': {'term': {'_id': db_name}}}
 
-    if es.is_atleastsixsix():
-        # TODO check support for kibana 7
-        # TODO use doc_type='_doc' instead
+    if es.is_atleastseveneleven():
+        res = es.search(index='kibana-int', body=query, _source_includes=['dashboard'])
+    elif es.is_atleastsixsix():
         res = es.deprecated_search(index='kibana-int', doc_type='dashboard', body=query, _source_includes=['dashboard'])
     else:
         res = es.deprecated_search(index='kibana-int', doc_type='dashboard', body=query, _source_include=['dashboard'])
